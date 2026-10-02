@@ -166,11 +166,13 @@ function buildSidebar(){
     cat.appendChild(ch);side.appendChild(cat);
   });
 }
-function mkA(slug){var a=BYSLUG[slug];var b=document.createElement('button');b.className='alink';b.dataset.s=slug;b.textContent=a?a.title:slug;b.onclick=function(){go(slug);closeSide();};return b;}
+function mkA(slug){var a=BYSLUG[slug];var b=document.createElement('button');b.className='alink';b.dataset.s=slug;b.textContent=a?a.title:slug;b.onclick=function(){go(slug,true);closeSide();};return b;}
 // ---- article render ----
-function go(slug){
+/* neu=true bei Antippen (Menue, Querverweis, Suchtreffer, Logo): eigener Verlaufseintrag, damit
+   die Zurueck-Taste zum vorigen Artikel fuehrt (02.10.2026). Start und Zurueck selbst ersetzen nur. */
+function go(slug,neu){
   var a=BYSLUG[slug];if(!a){a=APP.articles[0];slug=a.slug;}
-  if(location.hash!=='#'+slug)history.replaceState(null,'','#'+slug);
+  if(location.hash!=='#'+slug){if(neu)history.pushState(null,'','#'+slug);else history.replaceState(null,'','#'+slug);}
   document.querySelectorAll('.alink').forEach(function(x){x.classList.toggle('active',x.dataset.s===slug);});
   // expand the cat containing it
   var m=document.getElementById('main');
@@ -179,8 +181,8 @@ function go(slug){
   var af=m.querySelector('.aromaframe');if(af)af.src=af.getAttribute('data-base')+'?theme='+shownTheme(); // Aromarad im angezeigten Modus
   m.scrollTop=0;window.scrollTo(0,0);
   // wire internal links
-  m.querySelectorAll('a.ilink').forEach(function(l){l.onclick=function(e){e.preventDefault();go(l.dataset.s);};});
-  m.querySelectorAll('.seealso a').forEach(function(l){l.onclick=function(e){e.preventDefault();go(l.dataset.s);};});
+  m.querySelectorAll('a.ilink').forEach(function(l){l.onclick=function(e){e.preventDefault();go(l.dataset.s,true);};});
+  m.querySelectorAll('.seealso a').forEach(function(l){l.onclick=function(e){e.preventDefault();go(l.dataset.s,true);};});
 }
 function relatedChips(slug){
   var a=BYSLUG[slug];if(!a.rel||!a.rel.length)return '';
@@ -200,7 +202,7 @@ document.getElementById('search').addEventListener('input',function(e){
   var m=document.getElementById('main');
   m.innerHTML='<div class="crumb">Suche</div><h1 class="art" style="font-size:24px;margin:0 0 14px">'+hits.length+' Treffer für „'+e.target.value+'"</h1><div class="results"></div>';
   var box=m.querySelector('.results');
-  hits.forEach(function(a){var b=document.createElement('button');b.className='alink';b.dataset.s=a.slug;b.textContent=a.title;b.onclick=function(){go(a.slug);};box.appendChild(b);});
+  hits.forEach(function(a){var b=document.createElement('button');b.className='alink';b.dataset.s=a.slug;b.textContent=a.title;b.onclick=function(){go(a.slug,true);};box.appendChild(b);});
   if(!hits.length)m.querySelector('.results').innerHTML='<p class="muted">Nichts gefunden.</p>';
 });
 // ---- mobile ----
@@ -208,7 +210,7 @@ function closeSide(){document.getElementById('side').classList.remove('open');do
 document.getElementById('menubtn').onclick=function(){document.getElementById('side').classList.toggle('open');document.getElementById('backdrop').classList.toggle('open');};
 document.getElementById('backdrop').onclick=closeSide;
 // ---- init ----
-document.getElementById('logo').onclick=function(){go(APP.articles[0].slug);closeSide();};
+document.getElementById('logo').onclick=function(){go(APP.articles[0].slug,true);closeSide();};
 initTheme();buildSidebar();
 var start=location.hash.slice(1);go(BYSLUG[start]?start:APP.articles[0].slug);
 window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(h&&BYSLUG[h])go(h);});
